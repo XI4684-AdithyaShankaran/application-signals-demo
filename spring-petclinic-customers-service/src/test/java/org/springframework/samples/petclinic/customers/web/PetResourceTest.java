@@ -17,7 +17,6 @@ package org.springframework.samples.petclinic.customers.web;
 
 import java.util.Optional;
 
-import org.hibernate.validator.internal.IgnoreForbiddenApisErrors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +24,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
 import org.springframework.samples.petclinic.customers.aws.*;
 import org.springframework.samples.petclinic.customers.model.Owner;
 import org.springframework.samples.petclinic.customers.model.OwnerRepository;
@@ -97,18 +95,13 @@ class PetResourceTest {
         Pet pet = setupPet();
         given(petRepository.findById(2)).willReturn(Optional.of(pet));
 
-        given(restTemplate.getForEntity(anyString(), eq(PetInsurance.class), (Object[]) any()))
-            .willReturn(ResponseEntity.ok(new PetInsurance()));
-
         given(restTemplate.getForEntity(anyString(), eq(PetNutrition.class), (Object[]) any()))
             .willReturn(ResponseEntity.ok(new PetNutrition()));
 
         mvc.perform(get("/owners/2/pets/2").accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json"))
-        .andExpect(jsonPath("$.type.id").value(EXPECTED_PET_TYPE_ID));
-    }
-        .andExpect(jsonPath("$.type.id").value(6));
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.type.id").value(EXPECTED_PET_TYPE_ID));
     }
 
     private Pet setupPet() {
@@ -128,3 +121,5 @@ class PetResourceTest {
         owner.addPet(pet);
         return pet;
     }
+
+}
