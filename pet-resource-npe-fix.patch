@@ -1,0 +1,143 @@
+diff --git a/spring-petclinic-customers-service/src/main/java/org/springframework/samples/petclinic/customers/web/PetResource.java b/spring-petclinic-customers-service/src/main/java/org/springframework/samples/petclinic/customers/web/PetResource.java
+index 1234567..abcdefg 100644
+--- a/spring-petclinic-customers-service/src/main/java/org/springframework/samples/petclinic/customers/web/PetResource.java
++++ b/spring-petclinic-customers-service/src/main/java/org/springframework/samples/petclinic/customers/web/PetResource.java
+@@ -136,32 +136,35 @@ class PetResource {
+         PetDetails detail = new PetDetails(findPetById(petId));
+ 
+         // enrich with insurance
+-        PetInsurance petInsurance = null;
+-        try{
+-            ResponseEntity<PetInsurance> response = restTemplate.getForEntity("http://insurance-service/pet-insurances/" + detail.getId(), PetInsurance.class);
+-            petInsurance = response.getBody();
+-        }
+-        catch (Exception ex){
+-            ex.printStackTrace();
+-        }
+-        if(petInsurance == null){
+-            System.out.println("empty petInsurance");
+-            return detail;
++        try {
++            ResponseEntity<PetInsurance> response = restTemplate.getForEntity(
++                "http://insurance-service/pet-insurances/" + detail.getId(), PetInsurance.class);
++            PetInsurance petInsurance = response.getBody();
++            if (petInsurance != null) {
++                detail.setInsurance_id(petInsurance.getInsurance_id());
++                detail.setInsurance_name(petInsurance.getInsurance_name());
++                detail.setPrice(petInsurance.getPrice());
++            } else {
++                log.warn("No insurance found for pet {}", petId);
++            }
++        } catch (Exception ex) {
++            log.error("Failed to fetch insurance for pet {}: {}", petId, ex.getMessage());
+         }
+-        detail.setInsurance_id(petInsurance.getInsurance_id());
+-        detail.setInsurance_name(petInsurance.getInsurance_name());
+-        detail.setPrice(petInsurance.getPrice());
+ 
+         // enrich with nutrition
+-        PetNutrition petNutrition = null;
+-        // will throw exception when the pet type is not found
+-        ResponseEntity<PetNutrition> response = restTemplate.getForEntity("http://nutrition-service/nutrition/" + detail.getType().getName(), PetNutrition.class);
+-        petNutrition = response.getBody();
+-
+-        if(petNutrition == null){
+-            System.out.println("empty petNutrition");
+-            return detail;
++        if (detail.getType() != null && detail.getType().getName() != null) {
++            try {
++                ResponseEntity<PetNutrition> response = restTemplate.getForEntity(
++                    "http://nutrition-service/nutrition/" + detail.getType().getName(), PetNutrition.class);
++                PetNutrition petNutrition = response.getBody();
++                if (petNutrition != null) {
++                    detail.setNutritionFacts(petNutrition.getFacts());
++                } else {
++                    log.warn("No nutrition facts found for pet type {}", detail.getType().getName());
++                }
++            } catch (Exception ex) {
++                log.error("Failed to fetch nutrition for pet type {}: {}", 
++                    detail.getType().getName(), ex.getMessage());
++            }
++        } else {
++            log.warn("Pet {} has no type information, skipping nutrition lookup", petId);
+         }
+-        detail.setNutritionFacts(petNutrition.getFacts());
+ 
+         return detail;
+     }
+
+diff --git a/spring-petclinic-customers-service/src/test/java/org/springframework/samples/petclinic/customers/web/PetResourceTest.java b/spring-petclinic-customers-service/src/test/java/org/springframework/samples/petclinic/customers/web/PetResourceTest.java
+index 1234567..abcdefg 100644
+--- a/spring-petclinic-customers-service/src/test/java/org/springframework/samples/petclinic/customers/web/PetResourceTest.java
++++ b/spring-petclinic-customers-service/src/test/java/org/springframework/samples/petclinic/customers/web/PetResourceTest.java
+@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+ import org.springframework.boot.test.mock.mockito.MockBean;
+ import org.springframework.http.MediaType;
++import org.springframework.http.ResponseEntity;
+ import org.springframework.samples.petclinic.customers.aws.*;
+ import org.springframework.samples.petclinic.customers.model.Owner;
+ import org.springframework.samples.petclinic.customers.model.OwnerRepository;
+@@ -36,6 +37,9 @@ import org.springframework.test.web.servlet.MockMvc;
+ import org.springframework.web.client.RestTemplate;
+ 
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.ArgumentMatchers.anyString;
++import static org.mockito.ArgumentMatchers.eq;
+ import static org.mockito.BDDMockito.given;
+ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+@@ -78,9 +82,19 @@ class PetResourceTest {
+ 
+         given(petRepository.findById(2)).willReturn(Optional.of(pet));
+ 
+-        given(restTemplate.getForEntity(anyString(), eq(PetInsurance.class), any(Object[].class)))
+-            .willReturn(ResponseEntity.ok(new PetInsurance()));
+-
++        // Mock insurance service call
++        PetInsurance petInsurance = new PetInsurance();
++        petInsurance.setInsurance_id(1);
++        petInsurance.setInsurance_name("Basic Coverage");
++        petInsurance.setPrice(29.99f);
++        given(restTemplate.getForEntity("http://insurance-service/pet-insurances/2", PetInsurance.class))
++            .willReturn(ResponseEntity.ok(petInsurance));
++
++        // Mock nutrition service call
++        PetNutrition petNutrition = new PetNutrition();
++        petNutrition.setPet_type("hamster");
++        petNutrition.setFacts("High protein diet recommended");
++        given(restTemplate.getForEntity("http://nutrition-service/nutrition/hamster", PetNutrition.class))
++            .willReturn(ResponseEntity.ok(petNutrition));
+ 
+         mvc.perform(get("/owners/2/pets/2").accept(MediaType.APPLICATION_JSON))
+             .andExpect(status().isOk())
+@@ -98,6 +112,7 @@ class PetResourceTest {
+ 
+         PetType petType = new PetType();
+         petType.setId(6);
++        petType.setName("hamster");
+         pet.setType(petType);
+ 
+         owner.addPet(pet);
+
+## Summary of Changes
+
+### PetResource.java NPE Fixes:
+1. **Null Safety**: Added null checks for `detail.getType()` and `detail.getType().getName()` before accessing nutrition service
+2. **Proper Logging**: Replaced `System.out.println()` with SLF4J logging (`log.warn()`, `log.error()`)
+3. **Exception Handling**: Improved exception handling with meaningful error messages
+4. **Resource Management**: Removed `ex.printStackTrace()` and added structured logging
+5. **Early Return Prevention**: Restructured logic to avoid early returns and ensure all enrichment attempts are made
+
+### PetResourceTest.java Improvements:
+1. **Missing Imports**: Added `ResponseEntity` and Mockito argument matchers (`any`, `anyString`, `eq`)
+2. **Proper Mocking**: Fixed RestTemplate mocking with specific URL patterns instead of generic matchers
+3. **Test Data**: Added pet type name to test setup to support nutrition service calls
+4. **Mock Objects**: Created proper mock objects with realistic data for both insurance and nutrition services
+
+### Compliance with Project Rules:
+- ✅ Uses SLF4J logging instead of System.out.println
+- ✅ Validates inputs at edges with meaningful error handling
+- ✅ Follows Spring Boot 2.6.x idioms
+- ✅ Maintains RestTemplate usage as preferred
+- ✅ Includes proper exception handling for remote calls

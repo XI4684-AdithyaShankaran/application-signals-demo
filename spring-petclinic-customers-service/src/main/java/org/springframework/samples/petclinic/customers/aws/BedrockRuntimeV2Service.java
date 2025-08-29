@@ -16,22 +16,21 @@ import software.amazon.awssdk.services.bedrockruntime.model.*;
 @Component
 @Slf4j
 public class BedrockRuntimeV2Service {
-    final BedrockRuntimeClient bedrockRuntimeV2Client;
+    private final BedrockRuntimeClient bedrockRuntimeV2Client;
 
     public BedrockRuntimeV2Service() {
         // AWS web identity is set for EKS clusters, if these are not set then use default credentials
         if (System.getenv("AWS_WEB_IDENTITY_TOKEN_FILE") == null && System.getProperty("aws.webIdentityTokenFile") == null) {
-            bedrockRuntimeV2Client = BedrockRuntimeClient.builder()
+            this.bedrockRuntimeV2Client = BedrockRuntimeClient.builder()
                     .region(Region.of(Util.REGION_FROM_EC2))
                     .build();
         }
         else {
-            bedrockRuntimeV2Client = BedrockRuntimeClient.builder()
+            this.bedrockRuntimeV2Client = BedrockRuntimeClient.builder()
                     .region(Region.of(Util.REGION_FROM_EKS))
                     .credentialsProvider(WebIdentityTokenFileCredentialsProvider.create())
                     .build();
         }
-
     }
 
     public String invokeAnthropicClaude(String petType) {
@@ -83,23 +82,12 @@ public class BedrockRuntimeV2Service {
 
             }
             String stopReason = responseBody.getString("stop_reason");
-            log.info(
-                    "Invoke Claude Model response: " +
-                            "{ " +
-                            "\"modelId\": \"" + claudeModelId + "\", " +
-                            "\"prompt_token_count\": " + promptTokenCount + ", " +
-                            "\"generation_token_count\": " + generationTokenCount + ", " +
-                            "\"prompt\": \"" + prompt + "\", " +
-                            "\"generated_text\": \"" + generatedText.replace("\n", " ") + "\", " +
-                            "\"max_gen_len\": 1000, " +
-                            "\"temperature\": 0.5, " +
-                            "\"top_p\": 0.9, " +
-                            "\"stop_reason\": \"" + stopReason + "\" " +
-                            " }");
+            log.info("Invoke Claude Model response: modelId={}, prompt_token_count={}, generation_token_count={}, stop_reason={}", 
+                    claudeModelId, promptTokenCount, generationTokenCount, stopReason);
 
             return generatedText;
         } catch (Exception e) {
-            log.error("Failed to invoke Anthropic claude: Error: %s%n ",e.getMessage());
+            log.error("Failed to invoke Anthropic claude: {}", e.getMessage(), e);
             throw e;
         }
     }

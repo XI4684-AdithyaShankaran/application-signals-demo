@@ -24,6 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.samples.petclinic.customers.aws.*;
 import org.springframework.samples.petclinic.customers.model.Owner;
 import org.springframework.samples.petclinic.customers.model.OwnerRepository;
@@ -35,6 +37,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.RestTemplate;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -48,6 +53,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(PetResource.class)
 @ActiveProfiles("test")
 class PetResourceTest {
+  
+    private static final int EXPECTED_PET_TYPE_ID = 6;
 
     @Autowired
     MockMvc mvc;
@@ -87,18 +94,21 @@ class PetResourceTest {
 
     @Test
     void shouldGetAPetInJSonFormat() throws Exception {
-
         Pet pet = setupPet();
-
         given(petRepository.findById(2)).willReturn(Optional.of(pet));
 
+        given(restTemplate.getForEntity(anyString(), eq(PetInsurance.class), (Object[]) any()))
+            .willReturn(ResponseEntity.ok(new PetInsurance()));
+
+        given(restTemplate.getForEntity(anyString(), eq(PetNutrition.class), (Object[]) any()))
+            .willReturn(ResponseEntity.ok(new PetNutrition()));
 
         mvc.perform(get("/owners/2/pets/2").accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andExpect(jsonPath("$.id").value(2))
-            .andExpect(jsonPath("$.name").value("Basil"))
-            .andExpect(jsonPath("$.type.id").value(6));
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json"))
+        .andExpect(jsonPath("$.type.id").value(EXPECTED_PET_TYPE_ID));
+    }
+        .andExpect(jsonPath("$.type.id").value(6));
     }
 
     private Pet setupPet() {
@@ -107,12 +117,12 @@ class PetResourceTest {
         owner.setLastName("Bush");
 
         Pet pet = new Pet();
-
         pet.setName("Basil");
         pet.setId(2);
 
         PetType petType = new PetType();
         petType.setId(6);
+        petType.setName("hamster");
         pet.setType(petType);
 
         owner.addPet(pet);

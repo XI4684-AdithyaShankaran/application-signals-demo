@@ -1,5 +1,5 @@
 ## Microservices
+- Existing calls: RestTemplate (timeouts + Resilience4j).
+- New calls: prefer WebClient (+ circuit breaker / retries).
 - Expose /actuator/health and /actuator/info.
-- Externalize config in application.yml; no secrets in repo.
-- Set HTTP client timeouts and Resilience4j fallbacks for remote calls.
-- Use Feign/WebClient with circuit breaker for interservice calls.
+- Config in application.yml; no secrets in repo.

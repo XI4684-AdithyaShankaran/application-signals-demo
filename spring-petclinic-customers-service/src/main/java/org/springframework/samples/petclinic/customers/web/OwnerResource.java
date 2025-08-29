@@ -62,12 +62,12 @@ class OwnerResource {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Owner createOwner(@Valid @RequestBody Owner owner) throws Exception {
+    public Owner createOwner(@Valid @RequestBody Owner owner) throws IllegalArgumentException {
         Span.current().setAttribute(WellKnownAttributes.OWNER_ID, UUID.randomUUID().toString());
         Span.current().setAttribute(WellKnownAttributes.ORDER_ID, UUID.randomUUID().toString());
 
         // don't save the owner for testing traffic
-        if (owner.getFirstName().equals("random-traffic")) {
+        if ("random-traffic".equals(owner.getFirstName())) {
             return owner;
         }
         return ownerRepository.save(owner);

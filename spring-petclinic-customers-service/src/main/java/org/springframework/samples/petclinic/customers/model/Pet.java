@@ -68,14 +68,21 @@ public class Pet {
 
     @Override
     public String toString() {
-        return new ToStringCreator(this)
+        ToStringCreator creator = new ToStringCreator(this)
             .append("id", this.getId())
             .append("name", this.getName())
-            .append("birthDate", this.getBirthDate())
-            .append("type", this.getType().getName())
-            .append("ownerFirstname", this.getOwner().getFirstName())
-            .append("ownerLastname", this.getOwner().getLastName())
-            .toString();
+            .append("birthDate", this.getBirthDate());
+        
+        if (this.getType() != null) {
+            creator.append("type", this.getType().getName());
+        }
+        
+        if (this.getOwner() != null) {
+            creator.append("ownerFirstname", this.getOwner().getFirstName())
+                   .append("ownerLastname", this.getOwner().getLastName());
+        }
+        
+        return creator.toString();
     }
 
 }

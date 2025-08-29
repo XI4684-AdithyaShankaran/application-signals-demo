@@ -13,11 +13,25 @@ eureka:
 
 logging:
   level:
-    root: OFF
+    root: WARN
+    org.springframework.samples.petclinic.customers: INFO
     org.springframework.samples.petclinic.customers.web.PetResource: INFO
-    org.springframework.samples.petclinic.customers.aws.SqsService: FATAL
+    org.springframework.samples.petclinic.customers.aws: INFO
   pattern:
     level: trace_id=%mdc{trace_id} span_id=%mdc{span_id} trace_flags=%mdc{trace_flags} %5p
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      pet-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
 
 ---
 spring:

@@ -1,6 +1,6 @@
 ## Observability
-- Enable OpenTelemetry + Micrometer.
-- Propagate W3C tracecontext (traceparent, tracestate).
-- Include traceId and spanId in logs via MDC; Logback pattern must print them.
-- Emit metrics with consistent tags: service, endpoint, status.
-- Prefer CloudWatch (logs/metrics/traces) and Application Signals when deployed.
+- Micrometer + OpenTelemetry (enabled in deploy profiles, optional in unit tests).
+- Propagate W3C tracecontext.
+- JSON logging with MDC: service, traceId, spanId.
+- Emit metrics with tags {service, endpoint, status}.
+- Target CloudWatch + Application Signals in deploys.

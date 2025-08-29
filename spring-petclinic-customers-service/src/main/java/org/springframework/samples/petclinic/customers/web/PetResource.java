@@ -18,6 +18,7 @@
  */
 package org.springframework.samples.petclinic.customers.web;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micrometer.core.annotation.Timed;
 import io.opentelemetry.api.trace.Span;
 import lombok.RequiredArgsConstructor;
@@ -85,7 +86,7 @@ class PetResource {
             sqsService.sendMsg();
             owner.addPet(pet);
         } catch (Exception e) {
-            log.error("Failed to add pet: '{}' for owner: '{}'", petRequest.getName(), owner);
+            log.error("Failed to add pet for owner ID: {}", ownerId, e);
             throw e;
         }
         return save(pet, petRequest);
@@ -113,7 +114,7 @@ class PetResource {
                 petType = pet.getType().getName();
             }
         } catch (Exception e) {
-            log.error("Failed to find pet: '{}' ", petId);
+            log.error("Failed to find pet: {}", petId, e);
         }
 
         bedrockRuntimeV1Service.invokeTitanModel(petType);
@@ -149,11 +150,12 @@ class PetResource {
         petRepository.findPetTypeById(petRequest.getTypeId())
             .ifPresent(pet::setType);
 
-        log.info("Saving pet {}", pet);
+        log.info("Saving pet with ID: {}", pet.getId());
         return petRepository.save(pet);
     }
 
     @GetMapping("owners/{ownerId}/pets/{petId}")
+    @CircuitBreaker(name = "pet-service", fallbackMethod = "findPetFallback")
     public PetDetails findPet(@PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId) {
         Span.current().setAttribute(WellKnownAttributes.PET_ID, petId);
         Span.current().setAttribute(WellKnownAttributes.OWNER_ID, ownerId);
@@ -162,37 +164,48 @@ class PetResource {
         PetDetails detail = new PetDetails(findPetById(petId));
 
         // enrich with insurance
-        PetInsurance petInsurance = null;
-        try{
-            ResponseEntity<PetInsurance> response = restTemplate.getForEntity("http://insurance-service/pet-insurances/" + detail.getId(), PetInsurance.class);
-            petInsurance = response.getBody();
+        try {
+            ResponseEntity<PetInsurance> response = restTemplate.getForEntity(
+                "http://insurance-service/pet-insurances/" + detail.getId(), PetInsurance.class);
+            PetInsurance petInsurance = response.getBody();
+            if (petInsurance != null) {
+                detail.setInsurance_id(petInsurance.getInsurance_id());
+                detail.setInsurance_name(petInsurance.getInsurance_name());
+                detail.setPrice(petInsurance.getPrice());
+            } else {
+                log.warn("No insurance found for pet {}", petId);
+            }
+        } catch (Exception ex) {
+            log.error("Failed to fetch insurance for pet {}: {}", petId, ex.getMessage());
         }
-        catch (Exception ex){
-            ex.printStackTrace();
-        }
-        if(petInsurance == null){
-            System.out.println("empty petInsurance");
-            return detail;
-        }
-        detail.setInsurance_id(petInsurance.getInsurance_id());
-        detail.setInsurance_name(petInsurance.getInsurance_name());
-        detail.setPrice(petInsurance.getPrice());
 
         // enrich with nutrition
-        PetNutrition petNutrition = null;
-        // will throw exception when the pet type is not found
-        ResponseEntity<PetNutrition> response = restTemplate.getForEntity("http://nutrition-service/nutrition/" + detail.getType().getName(), PetNutrition.class);
-        petNutrition = response.getBody();
-
-        if(petNutrition == null){
-            System.out.println("empty petNutrition");
-            return detail;
+        if (detail.getType() != null && detail.getType().getName() != null) {
+            try {
+                ResponseEntity<PetNutrition> response = restTemplate.getForEntity(
+                    "http://nutrition-service/nutrition/" + detail.getType().getName(), PetNutrition.class);
+                PetNutrition petNutrition = response.getBody();
+                if (petNutrition != null) {
+                    detail.setNutritionFacts(petNutrition.getFacts());
+                } else {
+                    log.warn("No nutrition facts found for pet type {}", detail.getType().getName());
+                }
+            } catch (Exception ex) {
+                log.error("Failed to fetch nutrition for pet type {}: {}", 
+                    detail.getType().getName(), ex.getMessage());
+            }
+        } else {
+            log.warn("Pet {} has no type information, skipping nutrition lookup", petId);
         }
-        detail.setNutritionFacts(petNutrition.getFacts());
 
         return detail;
     }
 
+    public PetDetails findPetFallback(int ownerId, int petId, Exception ex) {
+        log.warn("Circuit breaker fallback for pet {}: {}", petId, ex.getMessage());
+        PetDetails detail = new PetDetails(findPetById(petId));
+        return detail;
+    }
 
     private Pet findPetById(int petId) {
         Optional<Pet> pet = petRepository.findById(petId);

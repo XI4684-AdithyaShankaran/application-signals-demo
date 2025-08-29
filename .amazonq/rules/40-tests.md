@@ -1,4 +1,6 @@
 ## Testing
-- Unit test coverage ≥ 80% with JaCoCo.
-- Use Testcontainers for integration tests.
-- Every bug fix requires a regression test.
+- Unit coverage ≥ 80% per module (exclude generated DTOs).
+- Testcontainers for integration tests.
+- Every bug fix adds a regression test.
+- Unit tests run offline: mock all external HTTP.
+- In tests: disable Config Server/Eureka.

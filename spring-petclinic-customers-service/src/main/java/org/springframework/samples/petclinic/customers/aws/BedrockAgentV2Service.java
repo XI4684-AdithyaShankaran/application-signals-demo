@@ -37,18 +37,18 @@ public class BedrockAgentV2Service {
             ListKnowledgeBasesResponse listResponse = bedrockAgentV2Client.listKnowledgeBases(listRequest);
             if(listResponse.hasKnowledgeBaseSummaries() && !listResponse.knowledgeBaseSummaries().isEmpty()) {
                 String knowledgeBaseId = listResponse.knowledgeBaseSummaries().get(0).knowledgeBaseId();
-                System.out.printf("GetKnowledgeBaseRequest: " + knowledgeBaseId);
+                log.info("GetKnowledgeBaseRequest: {}", knowledgeBaseId);
                 GetKnowledgeBaseRequest request = GetKnowledgeBaseRequest.builder()
                         .knowledgeBaseId(knowledgeBaseId).build();
                 GetKnowledgeBaseResponse response = bedrockAgentV2Client.getKnowledgeBase(request);
-                System.out.printf("KnowledgeBase ID: " + response.knowledgeBase().knowledgeBaseId());
+                log.info("KnowledgeBase ID: {}", response.knowledgeBase().knowledgeBaseId());
                 return response.knowledgeBase().knowledgeBaseId();
             } else {
-                System.out.printf("No knowledge bases found in AWS Bedrock");
+                log.warn("No knowledge bases found in AWS Bedrock");
                 return "";
             }
         } catch (Exception e) {
-            System.out.printf("Failed to GetKnowledgeBaseRequest! Error: %s%n", e.getMessage());
+            log.error("Failed to GetKnowledgeBaseRequest! Error: {}", e.getMessage(), e);
             throw e;
         }
     }

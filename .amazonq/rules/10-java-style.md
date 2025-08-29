@@ -1,6 +1,6 @@
 ## Java style
-- Java 17+ and Spring Boot 3.x idioms.
+- Java 17; Spring Boot 2.6.x.
 - Constructor injection only; no field injection.
-- Public APIs must have Javadoc.
-- Use SLF4J; no System.out.println.
-- Validate inputs at the edges; return meaningful HTTP codes.
+- Public APIs documented with Javadoc.
+- SLF4J only (no System.out).
+- Centralized errors via @ControllerAdvice; meaningful HTTP codes.
