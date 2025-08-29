@@ -128,4 +128,3 @@ class PetResourceTest {
         owner.addPet(pet);
         return pet;
     }
-}
