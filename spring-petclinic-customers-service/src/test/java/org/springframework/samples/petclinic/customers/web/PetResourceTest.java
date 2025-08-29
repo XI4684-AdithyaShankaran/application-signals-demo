@@ -95,12 +95,15 @@ class PetResourceTest {
         Pet pet = setupPet();
         given(petRepository.findById(2)).willReturn(Optional.of(pet));
 
-        given(restTemplate.getForEntity(anyString(), eq(PetNutrition.class), (Object[]) any()))
+        given(restTemplate.getForEntity(anyString(), eq(PetNutrition.class)))
             .willReturn(ResponseEntity.ok(new PetNutrition()));
+        
+        given(restTemplate.getForEntity(anyString(), eq(PetInsurance.class)))
+            .willReturn(ResponseEntity.ok(new PetInsurance()));
 
         mvc.perform(get("/owners/2/pets/2").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.type.id").value(EXPECTED_PET_TYPE_ID));
     }
 
