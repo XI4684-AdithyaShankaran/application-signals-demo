@@ -1,6 +1,5 @@
-## Observability
-- Micrometer + OpenTelemetry (enabled in deploy profiles, optional in unit tests).
-- Propagate W3C tracecontext.
-- JSON logging with MDC: service, traceId, spanId.
-- Emit metrics with tags {service, endpoint, status}.
-- Target CloudWatch + Application Signals in deploys.
+# Observability
+- Micrometer + OpenTelemetry; propagate W3C tracecontext.
+- JSON logs with MDC: service, traceId, spanId, user/context keys.
+- Emit metrics with tags {service, endpoint, status}; timers around I/O.
+- Target CloudWatch + Application Signals in deploy profiles.
