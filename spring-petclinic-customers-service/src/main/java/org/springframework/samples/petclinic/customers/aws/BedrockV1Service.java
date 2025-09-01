@@ -51,8 +51,8 @@ public class BedrockV1Service {
                 GetGuardrailResult response = bedrockV1Client.getGuardrail(request);
                 responseString = response.toString();
             }
-        } catch (Exception e) {
-            log.error("Failed to GetGuardrailRequest. Error: %s", e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Failed to GetGuardrailRequest", e);
             return "";
         }
         return "Guardrail ID: " + responseString;

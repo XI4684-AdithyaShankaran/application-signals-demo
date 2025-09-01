@@ -74,7 +74,7 @@ export class DatabaseStack extends cdk.Stack {
       ),
       removalPolicy: RemovalPolicy.DESTROY,
       deleteAutomatedBackups: true,
-      deletionProtection: false,
+      deletionProtection: true,
       backupRetention: Duration.days(0),
     });
 

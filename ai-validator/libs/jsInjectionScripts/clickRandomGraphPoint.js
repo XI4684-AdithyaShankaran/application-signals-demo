@@ -233,7 +233,8 @@ function clickRandomGraphPoint(chartPosition, checkboxPosition) {
 
         return; // If this was successful, you can exit this loop
       } catch (error) {
-        console.warn(`Attempt ${attempt}: Error occurred - ${error.message}`);
+        const sanitizedMessage = error && error.message ? String(error.message).replace(/[<>"'&]/g, '') : 'Unknown error';
+        console.warn(`Attempt ${attempt}: Error occurred - ${sanitizedMessage}`);
       }
 
       await wait(RETRY_DELAY); // If this was not successful, delay then try again

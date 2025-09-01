@@ -29,8 +29,8 @@ class PetInsuranceViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         owner_id = request.data.get('owner_id')
         pet_id = request.data.get('pet_id')
-        logger.info(f"PetInsuranceViewSet.create() called - Creating pet insurance for owner_id: {owner_id}, pet_id: {pet_id}")
-        logger.debug(f"Request data: {request.data}")
+        logger.info("PetInsuranceViewSet.create() called - Creating pet insurance for owner_id: %s, pet_id: %s", owner_id, pet_id)
+        logger.debug("Request data: %s", str(request.data)[:200] if request.data else 'None')
         
         serializer = self.get_serializer(data=request.data)
         try:
@@ -47,8 +47,8 @@ class PetInsuranceViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         pet_id = instance.pet_id
         owner_id = request.data.get('owner_id')
-        logger.info(f"PetInsuranceViewSet.update() called - Updating pet insurance for pet_id: {pet_id}, owner_id: {owner_id}")
-        logger.debug(f"Request data: {request.data}")
+        logger.info("PetInsuranceViewSet.update() called - Updating pet insurance for pet_id: %s, owner_id: %s", pet_id, owner_id)
+        logger.debug("Request data: %s", str(request.data)[:200] if request.data else 'None')
         
         serializer = self.get_serializer(instance, data=request.data, partial=True)
 
@@ -65,7 +65,7 @@ class PetInsuranceViewSet(viewsets.ModelViewSet):
         try:
             serializer.save()
             insurance_name = serializer.data.get("insurance_name")
-            logger.debug(f"Generating billing for owner_id: {owner_id}, insurance_name: {insurance_name}")
+            logger.debug("Generating billing for owner_id: %s, insurance_name: %s", str(owner_id), str(insurance_name)[:100] if insurance_name else 'None')
             generate_billings(serializer.data, owner_id, "insurance", insurance_name)
             logger.info(f"PetInsuranceViewSet.perform_update() - Successfully saved and generated billing for owner_id: {owner_id}")
         except Exception as e:

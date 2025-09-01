@@ -27,7 +27,7 @@ done
 # Set region with provided value or default
 REGION="${REGION:-$DEFAULT_REGION}"
 
-export AWS_DEFAULT_REGION=$REGION
+export AWS_DEFAULT_REGION="$REGION"
 
 # Variables
 SG_NAME="k8s-demo-security-group"
@@ -43,7 +43,7 @@ function create_resources() {
 
     # Fetch the latest Amazon Linux 2 AMI ID
     IMAGE_ID=$(aws ec2 describe-images \
-      --region $REGION \
+      --region "$REGION" \
       --owners amazon \
       --filters "Name=name,Values=al2023-ami-minimal-*-x86_64" "Name=state,Values=available" \
       --query 'Images | sort_by(@, &CreationDate) | [-1].ImageId' \
@@ -54,9 +54,9 @@ function create_resources() {
 
     # TODO
     # Create a security group
-    sg_id=$(aws ec2 create-security-group --group-name $SG_NAME --description "Security group for all traffic" --vpc-id $vpc_id --query 'GroupId' --output text)
+    sg_id=$(aws ec2 create-security-group --group-name "$SG_NAME" --description "Security group for all traffic" --vpc-id "$vpc_id" --query 'GroupId' --output text)
     # Allow all traffic from its own security group
-    aws ec2 authorize-security-group-ingress --group-id $sg_id --protocol all --source-group $sg_id
+    aws ec2 authorize-security-group-ingress --group-id "$sg_id" --protocol all --source-group "$sg_id"
     # Allow SSH from anywhere
     aws ec2 authorize-security-group-ingress --group-id $sg_id --protocol tcp --port 22 --cidr 0.0.0.0/0
     # Allow TCP traffic on port 32080 from anywhere

@@ -47,7 +47,7 @@ check_if_step_failed_and_exit "There was an error creating the ServiceAccount, e
 
 # Install aws-ebs-csi-driver addon
 echo "Checking aws-ebs-csi-driver add-on"    
-result=$(aws eks describe-addon --addon-name aws-ebs-csi-driver --cluster-name ${CLUSTER_NAME} --region ${REGION} 2>&1)
+result=$(aws eks describe-addon --addon-name aws-ebs-csi-driver --cluster-name "${CLUSTER_NAME}" --region "${REGION}" 2>&1)
 echo "${result}"
 
 if [[ "${result}" == *"No addon: "* ]];  then
@@ -61,8 +61,10 @@ if [[ "${result}" == *"No addon: "* ]];  then
     # Fetch the initial status
     status=$(aws eks describe-addon --cluster-name ${CLUSTER_NAME} --addon-name aws-ebs-csi-driver --region ${REGION} | grep '"status":' | awk -F '"' '{print $4}')
 
-    # Loop until status becomes "ACTIVE"
-    while [[ "$status" != "ACTIVE" ]]; do
+    # Loop until status becomes "ACTIVE" with timeout
+    timeout=600  # 10 minutes timeout
+    elapsed=0
+    while [[ "$status" != "ACTIVE" ]] && [[ $elapsed -lt $timeout ]]; do
       echo "Current status: $status"
       if [[ "$status" == "CREATE_FAILED" ]]; then
         echo "Create aws-ebs-csi-driver add-on failed!"
@@ -70,8 +72,14 @@ if [[ "${result}" == *"No addon: "* ]];  then
       fi 
       echo "Waiting for addon to become ACTIVE..."
       sleep 20  # wait for 20 seconds before checking again
-      status=$(aws eks describe-addon --cluster-name ${CLUSTER_NAME} --addon-name aws-ebs-csi-driver --region ${REGION} | grep '"status":' | awk -F '"' '{print $4}')
+      elapsed=$((elapsed + 20))
+      status=$(aws eks describe-addon --cluster-name "${CLUSTER_NAME}" --addon-name aws-ebs-csi-driver --region "${REGION}" | grep '"status":' | awk -F '"' '{print $4}')
     done
+    
+    if [[ $elapsed -ge $timeout ]]; then
+      echo "Timeout waiting for addon to become ACTIVE"
+      exit 1
+    fi
 
     echo "EKS aws-ebs-csi-driver add-on is now ACTIVE"
 fi

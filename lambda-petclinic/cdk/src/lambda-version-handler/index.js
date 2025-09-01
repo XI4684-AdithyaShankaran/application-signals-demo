@@ -3,6 +3,8 @@ const { Lambda } = require('@aws-sdk/client-lambda');
 const { S3 } = require('@aws-sdk/client-s3');
 const https = require('https');
 const { URL } = require('url');
+
+// Initialize clients at module level
 const lambda = new Lambda();
 const s3 = new S3();
 
@@ -90,10 +92,12 @@ async function sendCloudFormationResponse(event, context, status, responseData =
 // Helper function to log details with timestamps
 function logWithTimestamp(message, obj = null) {
   const timestamp = new Date().toISOString();
+  // Sanitize message to prevent log injection
+  const sanitizedMessage = typeof message === 'string' ? message.replace(/[\r\n]/g, ' ') : String(message);
   if (obj) {
-    console.log(`[${timestamp}] ${message}:`, JSON.stringify(obj, null, 2));
+    console.log(`[${timestamp}] ${sanitizedMessage}:`, JSON.stringify(obj, null, 2));
   } else {
-    console.log(`[${timestamp}] ${message}`);
+    console.log(`[${timestamp}] ${sanitizedMessage}`);
   }
 }
 

@@ -1,13 +1,21 @@
 #!/bin/bash
-psql_pass=$1
-private_setup_ip_address=$2
-SVC_NAME=$3
+set -e
+
+# Input validation
+if [ $# -ne 3 ]; then
+    echo "Usage: $0 <psql_pass> <private_setup_ip_address> <SVC_NAME>"
+    exit 1
+fi
+
+psql_pass="$1"
+private_setup_ip_address="$2"
+SVC_NAME="$3"
 
 sudo yum install python3-pip python3-devel postgresql15 postgresql-devel gcc* tmux -y
 
 # get rds endpoint
-rds_endpoint=`aws rds describe-db-instances --db-instance-identifier petclinic-python --query "DBInstances[*].Endpoint.Address"`
-rds_endpoint=`echo $rds_endpoint | cut -d "\"" -f2 | cut -d "\"" -f1`
+rds_endpoint=$(aws rds describe-db-instances --db-instance-identifier petclinic-python --query "DBInstances[*].Endpoint.Address")
+rds_endpoint=$(echo "$rds_endpoint" | cut -d '"' -f2 | cut -d '"' -f1)
 
 export DJANGO_SETTINGS_MODULE=pet_clinic_billing_service.settings
 export DB_NAME=postgres

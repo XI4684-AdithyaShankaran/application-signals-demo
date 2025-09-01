@@ -96,8 +96,8 @@ public class BedrockRuntimeV1Service {
                             " }"
             );
             return "Invoke titan Model Result: " + result_body;
-        } catch (Exception e) {
-            log.error("Invoke titan Model Result: Error: %s", e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Invoke titan Model Result: Error occurred", e);
             throw e;
         }
     }

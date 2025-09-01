@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 # Script to synthesize, deploy, or destroy AWS CDK stacks with stack dependencies
 # Usage: ./ecs-cdk.sh <action>
@@ -19,10 +20,16 @@ fi
 # Run CDK synth once for all stacks
 if [[ "$ACTION" == "synth" || "$ACTION" == "deploy" ]]; then
   echo "Running npm install"
-  npm install
+  if ! npm install; then
+    echo "npm install failed"
+    exit 1
+  fi
 
   echo "Running CDK bootstrap"
-  cdk bootstrap
+  if ! cdk bootstrap; then
+    echo "CDK bootstrap failed"
+    exit 1
+  fi
 
   rm -rf cdk.out
   echo "Running CDK synth for all stacks..."

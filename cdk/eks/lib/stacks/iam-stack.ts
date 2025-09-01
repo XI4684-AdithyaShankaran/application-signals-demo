@@ -47,7 +47,7 @@ export class IAMStack extends Stack {
       ],
     };
 
-    // The node group role must be seperate from the cluster master role
+    // The node group role must be separate from the cluster master role
     this.eksNodeGroupRoleProp = {
       roleName: 'PetClinicEksNodeGroupRole',
       assumedBy: new ServicePrincipal('ec2.amazonaws.com'),

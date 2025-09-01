@@ -200,8 +200,19 @@ async def evaluate_js(
     Returns:
         Any: Result returned by the JavaScript function
     """
+    # Validate js_file to prevent path traversal
+    if ".." in js_file or "/" in js_file or "\\" in js_file:
+        raise ValueError("Invalid JavaScript file name")
+    
     js_file_path = os.path.join(os.path.dirname(
         __file__), "..", "jsInjectionScripts", js_file)
+    
+    # Ensure the resolved path is within the expected directory
+    expected_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "jsInjectionScripts"))
+    actual_path = os.path.abspath(js_file_path)
+    if not actual_path.startswith(expected_dir):
+        raise ValueError("File path outside allowed directory")
+    
     with open(js_file_path, 'r') as file:
         js_code = file.read()
 

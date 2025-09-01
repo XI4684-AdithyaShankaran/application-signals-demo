@@ -24,10 +24,11 @@ axiosRetry.default(axios, {
  */
 
 module.exports = function (app, port) {
+  const sanitizedApp = String(app).replace(/[\r\n\t]/g, '');
   logger.info('attempting to register with eureka', {
-    url: `${URL}/apps/${app}/`,
-    instanceId: `${app}-${port}`,
-    app: app.toUpperCase(),
+    url: `${URL}/apps/${sanitizedApp}/`,
+    instanceId: `${sanitizedApp}-${port}`,
+    app: sanitizedApp.toUpperCase(),
     hostName: ip.address(),
     port: port
   });
@@ -53,36 +54,36 @@ module.exports = function (app, port) {
   .then(function (res) {
     logger.info('successfully registered with eureka', {
       statusCode: res.status,
-      statusText: res.statusText,
-      instanceId: `${app}-${port}`
+      statusText: String(res.statusText || '').replace(/[\r\n\t]/g, ''),
+      instanceId: `${sanitizedApp}-${port}`
     });
     setInterval(() => {
       axios.put(`${URL}/apps/${app}/${app}-${port}`)
         .then(function (res) {
           logger.info('eureka hearbeat', {
             statusCode: res.status,
-            instanceId: `${app}-${port}`
+            instanceId: `${sanitizedApp}-${port}`
           });
         })
         .catch(function (err) {
           logger.error('failed to add heartbeat', {
-            error: err.message,
+            error: String(err.message || '').replace(/[\r\n\t]/g, ''),
             statusCode: err.response?.status,
-            statusText: err.response?.statusText,
-            responseData: err.response?.data,
-            url: `${URL}/apps/${app}/${app}-${port}`
+            statusText: String(err.response?.statusText || '').replace(/[\r\n\t]/g, ''),
+            responseData: String(err.response?.data || '').replace(/[\r\n\t]/g, ''),
+            url: `${URL}/apps/${sanitizedApp}/${sanitizedApp}-${port}`
           });
         })
     }, 50 * 1000);
   })
   .catch(function (err) {
     logger.error('failed to register with eureka', {
-      error: err.message,
+      error: String(err.message || '').replace(/[\r\n\t]/g, ''),
       statusCode: err.response?.status,
-      statusText: err.response?.statusText,
-      responseData: err.response?.data,
-      url: `${URL}/apps/${app}/`,
-      instanceId: `${app}-${port}`
+      statusText: String(err.response?.statusText || '').replace(/[\r\n\t]/g, ''),
+      responseData: String(err.response?.data || '').replace(/[\r\n\t]/g, ''),
+      url: `${URL}/apps/${sanitizedApp}/`,
+      instanceId: `${sanitizedApp}-${port}`
     });
   });
 };

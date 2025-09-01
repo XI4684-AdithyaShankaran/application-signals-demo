@@ -66,6 +66,7 @@ create_dynamodb_table()
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.connect(("8.8.8.8", 80))
 local_ip = s.getsockname()[0]
+s.shutdown(socket.SHUT_RDWR)
 s.close()
 billing_service_ip = os.environ.get('BILLING_SERVICE_IP', local_ip)
 eureka_server_url = os.environ.get('EUREKA_SERVER_URL', 'localhost')

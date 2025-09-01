@@ -39,6 +39,11 @@ export class AlarmsStack extends Stack {
 
   private loadTestCases(filePath: string, testType: string): any[] {
     try {
+      // Validate file path to prevent path traversal
+      if (filePath.includes('..') || !path.isAbsolute(filePath)) {
+        throw new Error('Invalid file path');
+      }
+      
       const content = fs.readFileSync(filePath, 'utf-8');
       const data = JSON.parse(content);
       

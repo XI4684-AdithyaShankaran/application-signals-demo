@@ -85,7 +85,7 @@ class PetResource {
         try {
             sqsService.sendMsg();
             owner.addPet(pet);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Failed to add pet for owner ID: {}", ownerId, e);
             throw e;
         }
@@ -113,8 +113,8 @@ class PetResource {
             if (pet.getType() != null) {
                 petType = pet.getType().getName();
             }
-        } catch (Exception e) {
-            log.error("Failed to find pet: {}", petId, e);
+        } catch (RuntimeException e) {
+            log.error("Failed to find pet with ID: {}", petId, e);
         }
 
         bedrockRuntimeV1Service.invokeTitanModel(petType);
@@ -175,8 +175,8 @@ class PetResource {
             } else {
                 log.warn("No insurance found for pet {}", petId);
             }
-        } catch (Exception ex) {
-            log.error("Failed to fetch insurance for pet {}: {}", petId, ex.getMessage());
+        } catch (RuntimeException ex) {
+            log.error("Failed to fetch insurance for pet with ID: {}", petId, ex);
         }
 
         // enrich with nutrition
@@ -190,9 +190,9 @@ class PetResource {
                 } else {
                     log.warn("No nutrition facts found for pet type {}", detail.getType().getName());
                 }
-            } catch (Exception ex) {
-                log.error("Failed to fetch nutrition for pet type {}: {}", 
-                    detail.getType().getName(), ex.getMessage());
+            } catch (RuntimeException ex) {
+                log.error("Failed to fetch nutrition for pet type: {}", 
+                    detail.getType().getName(), ex);
             }
         } else {
             log.warn("Pet {} has no type information, skipping nutrition lookup", petId);

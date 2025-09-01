@@ -194,7 +194,14 @@ async def click_trace_id(browser: BrowserContext):
 
 async def main():
     # Get test prompt file
+    if len(sys.argv) < 2:
+        raise ValueError("File path argument is required")
+    
     file_path = sys.argv[1]
+    # Validate file path to prevent path traversal
+    if ".." in file_path or not file_path.endswith(".script.md"):
+        raise ValueError("Invalid file path")
+    
     file_name = Path(file_path).name
     test_id = file_name.replace(".script.md", "")
 

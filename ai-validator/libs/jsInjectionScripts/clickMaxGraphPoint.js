@@ -253,11 +253,9 @@ function clickMaxGraphPoint(chartPosition, checkboxPosition) {
         // Send this hover event to the <circle> datapoint object
         datapoint.dispatchEvent(clickEvent);
         await wait(2000);
-        if (
-          !iframeDoc.body.textContent.includes(
-            "No spans with any faults were found for the selected time range." // If this message appears, no correlated spans were found, so try again
-          )
-        ) {
+        const bodyText = iframeDoc.body.textContent || '';
+        const sanitizedText = bodyText.replace(/[\r\n\t]/g, ' ').trim();
+        if (!sanitizedText.includes("No spans with any faults were found for the selected time range.")) {
           return; // If this was successful, you can exit this loop
         }
       } catch (error) {

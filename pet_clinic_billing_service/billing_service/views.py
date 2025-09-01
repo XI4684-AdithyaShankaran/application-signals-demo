@@ -71,7 +71,7 @@ class BillingViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None, owner_id=None, type=None, pet_id=None):
-        logger.info(f"BillingViewSet.retrieve() called - pk: {pk}, owner_id: {owner_id}, type: {type}, pet_id: {pet_id}")
+        logger.info("BillingViewSet.retrieve() called - pk: %s, owner_id: %s, type: %s, pet_id: %s", pk, owner_id, type, pet_id)
         try:
             billing_obj = None
             if pk is not None:

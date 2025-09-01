@@ -20,27 +20,27 @@ def get_owner_info(owner_id):
     trace.get_current_span().set_attribute("customer.id", owner_id)
     server_url = resolve_service_url("customers-service")
     response = requests.get(server_url + "owner/" + str(owner_id) + "")
-    logger.error(server_url + "owner/" + str(owner_id) + "", response.status_code)
+    logger.error("Owner request - URL: %s, Status: %s", server_url + "owner/" + str(owner_id), response.status_code)
     data = json.loads(response.text)
-    logger.error(data)
+    logger.error("Owner data retrieved: %s", str(data)[:200] if data else 'None')
     return data
 
 def create_billings(url, data):
-    logger.error(data)
+    logger.error("Creating billing with data: %s", str(data)[:200] if data else 'None')
     response = requests.post(url, data)
-    logger.error(url + " - " +  str(response.status_code))
+    logger.error("Create billing request - URL: %s, Status: %s", url, response.status_code)
 
 def update_billings(url, data):
-    logger.error(data)
+    logger.error("Updating billing with data: %s", str(data)[:200] if data else 'None')
     response = requests.put(url, data)
-    logger.error(url + " - " +  str(response.status_code))
+    logger.error("Update billing request - URL: %s, Status: %s", url, response.status_code)
 
 def generate_billings(pet_insurance, owner_id, type, type_name):
     server_url = resolve_service_url("billing-service")
     pet_id = pet_insurance["pet_id"]
     url = f"{server_url}billings/{owner_id}/{pet_id}/{type}/"
     response = requests.get(url)
-    logger.error(url + " - " + str(response.status_code))
+    logger.error("Generate billing request - URL: %s, Status: %s", url, response.status_code)
     if response.status_code != 200 :
         logger.error("create")
         create_billings(server_url + "billings/", {

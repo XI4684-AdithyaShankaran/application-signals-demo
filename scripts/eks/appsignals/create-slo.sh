@@ -1,10 +1,18 @@
 #!/bin/bash
+set -e
 
 # change the directory to the script location so that the relative path can work
 cd "$(dirname "$0")"
 
-CLUSTER_NAME=$1
-REGION=$2
+CLUSTER_NAME="$1"
+REGION="$2"
+
+# Validate required parameters
+if [[ -z "$CLUSTER_NAME" || -z "$REGION" ]]; then
+  echo "Error: Both CLUSTER_NAME and REGION parameters are required"
+  echo "Usage: $0 <cluster_name> <region>"
+  exit 1
+fi
 SERVICE_NAME="pet-clinic-frontend-java"
 ENDPOINT="https://application-signals.$REGION.api.aws"
 
@@ -53,7 +61,7 @@ SERVICE_KEY_ATTRIBUTES=$(aws application-signals list-services \
   --cli-input-json "$LIST_SERVICES_REQUEST_WITH_CORRECT_INPUT" \
   --output json --query "(ServiceSummaries[?KeyAttributes.Name=='$SERVICE_NAME'].KeyAttributes)[0]")
 
-echo $SERVICE_KEY_ATTRIBUTES
+echo "$SERVICE_KEY_ATTRIBUTES"
 
 if [ "$SERVICE_KEY_ATTRIBUTES" = "" ]; then
   echo "The SERVICE_KEY_ATTRIBUTES should not be null, exiting"

@@ -1,12 +1,20 @@
 #!/bin/bash
-psql_pass=$1
-private_setup_ip_address=$2
-SVC_NAME=$3
+set -e
+
+# Input validation
+if [ $# -ne 3 ]; then
+    echo "Usage: $0 <psql_pass> <private_setup_ip_address> <SVC_NAME>"
+    exit 1
+fi
+
+psql_pass="$1"
+private_setup_ip_address="$2"
+SVC_NAME="$3"
 
 sudo yum install python3.9-pip python3.9-devel postgresql15 postgresql-devel gcc* tmux -y
 
 # get rds endpoint
-rds_endpoint=`aws rds describe-db-instances --db-instance-identifier petclinic-python --query "DBInstances[*].Endpoint.Address" --output text`
+rds_endpoint=$(aws rds describe-db-instances --db-instance-identifier petclinic-python --query "DBInstances[*].Endpoint.Address" --output text)
 
 PGPASSWORD=$psql_pass createuser djangouser -h $rds_endpoint -U root
 

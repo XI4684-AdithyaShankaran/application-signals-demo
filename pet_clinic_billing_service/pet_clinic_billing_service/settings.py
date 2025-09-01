@@ -113,10 +113,10 @@ else:
     # Retrieve from Secrets Manager
     try:
         DB_PASSWORD = get_secret_value(SECRET_NAME, REGION)
-        print(f"Retrieved secret '{SECRET_NAME}' from AWS Secrets Manager {DB_PASSWORD}")
+        print(f"Retrieved secret '{SECRET_NAME}' from AWS Secrets Manager [REDACTED]")
     except Exception as e:
         # Print the error
-        print(f"Error retrieving secret '{SECRET_NAME}' from AWS Secrets Manager: {e}", file=sys.stderr)
+        print(f"Error retrieving secret '{SECRET_NAME}' from AWS Secrets Manager: [ERROR_REDACTED]", file=sys.stderr)
 
 
 # Database

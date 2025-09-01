@@ -7,6 +7,14 @@ cd "$(dirname "$0")"
 # Set variables with provided arguments or default values
 CLUSTER_NAME=$1
 REGION=$2
+
+# Validate required parameters
+if [ -z "$CLUSTER_NAME" ] || [ -z "$REGION" ]; then
+    echo "Error: Both CLUSTER_NAME and REGION are required parameters"
+    echo "Usage: $0 <CLUSTER_NAME> <REGION>"
+    exit 1
+fi
+
 echo "Creating RDS Aurora Postgre cluster for EKS Cluster ${CLUSTER_NAME} in ${REGION}"
 
 # Fetch the EKS cluster VPC ID

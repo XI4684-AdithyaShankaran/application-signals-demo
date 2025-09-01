@@ -3,6 +3,11 @@ const log = require('SyntheticsLogger');
 const syntheticsConfiguration = synthetics.getConfiguration();
 
 const flowBuilderBlueprint = async function () {
+    // Basic authorization check
+    if (!process.env.URL) {
+        throw new Error('Unauthorized: URL environment variable not set');
+    }
+    
     let url = process.env.URL + "/#!/owners/new";
 
     syntheticsConfiguration.setConfig({

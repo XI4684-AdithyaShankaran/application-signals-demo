@@ -21,7 +21,10 @@ import software.amazon.awssdk.services.kinesis.model.Record;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+
 @Component
+@Slf4j
 public class KinesisService {
     String streamName = "apm_test";
     //This provider looks for the environment variables AWS_ROLE_ARN and AWS_WEB_IDENTITY_TOKEN_FILE
@@ -59,7 +62,7 @@ public class KinesisService {
             kinesisClient.createStream(streamReq);
 
         } catch (KinesisException e) {
-            System.err.println(e.getMessage());
+            log.error("Failed to create Kinesis stream: {}", streamName, e);
         }
     }
 
@@ -107,10 +110,10 @@ public class KinesisService {
         // Put result into record list. Result may be empty.
         records = result.records();
 
-        // Print records
+        // Log records
         for (Record record : records) {
             SdkBytes byteBuffer = record.data();
-            System.out.printf("Seq No: %s - %s%n", record.sequenceNumber(), new String(byteBuffer.asByteArray()));
+            log.info("Kinesis record - Seq No: {}, Data: {}", record.sequenceNumber(), new String(byteBuffer.asByteArray()));
         }
     }
 }

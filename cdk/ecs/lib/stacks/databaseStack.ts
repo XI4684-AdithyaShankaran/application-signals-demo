@@ -70,7 +70,7 @@ export class RdsDatabaseStack extends Stack {
             multiAz: false, // Disable Multi-AZ
             backupRetention: Duration.days(0), // 0 days backup retention
             removalPolicy: RemovalPolicy.DESTROY, // For dev/testing environments
-            deletionProtection: false, // Disable deletion protection
+            deletionProtection: true, // Enable deletion protection for security
             deleteAutomatedBackups: true,
         });
 

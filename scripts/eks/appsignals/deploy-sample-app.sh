@@ -51,15 +51,15 @@ ACCOUNT=$(aws sts get-caller-identity | jq -r '.Account')
 kubectl ${OPERATION} --namespace=$NAMESPACE -f ./sample-app/db/
 kubectl ${OPERATION} --namespace=$NAMESPACE -f ./sample-app/mongodb/
 
-host=$(aws rds describe-db-clusters --query 'DBClusters[].[Endpoint]' --db-cluster-identifier $db_cluster_identifier --region $REGION --output text)
+host=$(aws rds describe-db-clusters --query 'DBClusters[].[Endpoint]' --db-cluster-identifier "$db_cluster_identifier" --region "$REGION" --output text)
 
 sleep 60
 
 
 for config in $(ls ./sample-app/*.yaml)
 do
-    sed -i "s/\(http:\/\/otel-collector\.\)namespace\(\.svc\.cluster\.local:4317\)/\1$NAMESPACE\2/" $config
-    sed -e "s/111122223333.dkr.ecr.us-west-2/$ACCOUNT.dkr.ecr.$REGION/g" -e 's#\${REGION}'"#${REGION}#g" -e 's#\${DB_SERVICE_HOST}'"#${host}#g" $config | kubectl ${OPERATION} --namespace=$NAMESPACE -f -
+    sed -i "s/\(http:\/\/otel-collector\.\)namespace\(\.svc\.cluster\.local:4317\)/\1$NAMESPACE\2/" "$config"
+    sed -e "s/111122223333.dkr.ecr.us-west-2/$ACCOUNT.dkr.ecr.$REGION/g" -e 's#\${REGION}'"#${REGION}#g" -e 's#\${DB_SERVICE_HOST}'"#${host}#g" "$config" | kubectl "${OPERATION}" --namespace="$NAMESPACE" -f -
 done
 
 if [[ $OPERATION == "apply" ]]; then

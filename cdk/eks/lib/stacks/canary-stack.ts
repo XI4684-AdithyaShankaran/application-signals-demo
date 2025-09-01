@@ -10,6 +10,7 @@ interface SyntheticCanaryProps extends StackProps {
     vpc: Vpc,
     albEndpoint: string,
     syntheticCanaryRoleProp: RoleProps,
+    canaryNames?: string[],
   }
 
 export class SyntheticCanaryStack extends Stack {
@@ -19,8 +20,8 @@ export class SyntheticCanaryStack extends Stack {
 
   private readonly canaryScriptPath = path.join(__dirname, '..', 'canaries');
 
-  // Canary Configuration
-  private readonly canaryNameList: string[] = [
+  // Default canary configuration
+  private static readonly DEFAULT_CANARY_NAMES: string[] = [
     'pc-add-visit',
     'pc-create-owners',
     'pc-visit-pet',
@@ -32,12 +33,26 @@ export class SyntheticCanaryStack extends Stack {
     'pc-add-visit-error-rum',
     'pet-clinic-rum'
   ];
+  
+  private readonly canaryNameList: string[];
       
   constructor(scope: Construct, id: string, props: SyntheticCanaryProps) {
     super(scope, id, props);
 
-    const { albEndpoint, syntheticCanaryRoleProp } = props;
+    const { albEndpoint, syntheticCanaryRoleProp, canaryNames } = props;
+    
+    // Validate albEndpoint parameter
+    if (!albEndpoint || typeof albEndpoint !== 'string' || albEndpoint.trim() === '') {
+      throw new Error('albEndpoint parameter is required and must be a non-empty string');
+    }
+    
+    // Basic URL format validation
+    if (!albEndpoint.match(/^[a-zA-Z0-9.-]+$/)) {
+      throw new Error('albEndpoint parameter contains invalid characters');
+    }
+    
     this.albEndpoint = albEndpoint;
+    this.canaryNameList = canaryNames || SyntheticCanaryStack.DEFAULT_CANARY_NAMES;
 
     this.syntheticCanaryRole = new Role(this, 'EksClusterRole', syntheticCanaryRoleProp);
 
@@ -45,6 +60,7 @@ export class SyntheticCanaryStack extends Stack {
       bucketName: `cw-syn-results-petclinic-${this.account}-${this.region}`,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
+      enforceSSL: true,
     });
 
     this.canaryNameList.forEach((canaryName) => {
@@ -53,7 +69,7 @@ export class SyntheticCanaryStack extends Stack {
         role: this.syntheticCanaryRole,
         runtime: Runtime.SYNTHETICS_NODEJS_PUPPETEER_6_2,
         test: Test.custom({
-          code: Code.fromAsset(path.join(this.canaryScriptPath, `${canaryName}`)),
+          code: Code.fromAsset(path.join(this.canaryScriptPath, path.basename(canaryName))),
           handler: `${canaryName}.handler`,
         }),
         artifactsBucketLocation: {

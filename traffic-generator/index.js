@@ -36,7 +36,12 @@ const postPaymentData = (url, amount, notes) => {
         notes: notes
     };
 
-    return axios.post(url, data, { timeout: 10000 });
+    const headers = {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/json'
+    };
+
+    return axios.post(url, data, { timeout: 10000, headers });
 }
 
 const postVisitData = (url, date, description) => {
@@ -45,7 +50,12 @@ const postVisitData = (url, date, description) => {
         description: description
     };
 
-    return axios.post(url, data, { timeout: 10000 });
+    const headers = {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/json'
+    };
+
+    return axios.post(url, data, { timeout: 10000, headers });
 }
 
 
