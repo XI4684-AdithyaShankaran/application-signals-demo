@@ -1,4 +1,3 @@
 # Release hygiene
-- Tag + CHANGELOG updated; OpenAPI version bumped if API changed.
-- Image immutability: pinned digest in manifests/Helm.
-- Rollback plan verified; feature flags default-safe.
+- Tag + CHANGELOG updated; bump OpenAPI when API changed.
+- Pin image digests in manifests; verify rollback path; flags default-safe.

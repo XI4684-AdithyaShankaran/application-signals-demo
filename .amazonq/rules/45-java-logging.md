@@ -1,6 +1,6 @@
-# Logging rules
+# Java logging
 - private static final Logger log = LoggerFactory.getLogger(X.class);
-- Levels: INFO=milestones, WARN=recoverable issues, ERROR=failures; avoid DEBUG-only errors.
-- Structured logs: key/value context (petId={}, ownerId={}).
+- INFO=milestones, WARN=recoverable issues, ERROR=failures; no DEBUG-only errors.
+- Parameterized logs with key/value (petId={}, status={}).
 - Never log secrets/tokens/PII or full payloads.
-- Replace System.out/printStackTrace with proper logs + cause.
+- Replace System.out/printStackTrace with proper logs.

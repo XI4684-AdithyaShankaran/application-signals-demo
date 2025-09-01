@@ -1,5 +1,4 @@
 # Ops runbooks (summary)
-- Alarms: 5xx rate, latency p95, error-budget burn (1h/6h).
-- SLOs per service; link dashboards (CloudWatch/Service Map).
-- Incident basics: capture trace IDs, compare recent deploys, rollback steps.
-- Common playbooks: timeouts, DB saturation, dependency failure.
+- Alarms: 5xx rate, p95 latency, error-budget burn (1h/6h).
+- SLOs per service; link dashboards (CloudWatch).
+- Incident basics: capture trace IDs, check last deploys, rollback steps.

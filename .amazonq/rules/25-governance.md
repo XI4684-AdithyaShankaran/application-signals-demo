@@ -1,5 +1,4 @@
 # Governance / PR checklist
-- Follows all rules; passes checkstyle/spotbugs/jacoco (≥80% per module).
-- Security scans clean (no High/Critical CVEs).
-- Public API changes: tests + migration notes/CHANGELOG.
-- Update README/openapi as needed; no dead code.
+- Checkstyle/SpotBugs/Jacoco ≥80% pass; security scan has no High/Critical.
+- Update README/OpenAPI when APIs change; no dead code.
+- Include migration notes when public API changes.
