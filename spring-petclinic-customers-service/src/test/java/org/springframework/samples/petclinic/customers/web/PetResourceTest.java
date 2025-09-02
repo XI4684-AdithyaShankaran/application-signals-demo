@@ -91,7 +91,7 @@ class PetResourceTest {
     BedrockV2Service bedrockV2Service;
 
     @Test
-    void shouldGetAPetInJSonFormat() throws RuntimeException {
+    void shouldGetAPetInJSonFormat() {
         Pet pet = setupPet();
         given(petRepository.findById(2)).willReturn(Optional.of(pet));
 

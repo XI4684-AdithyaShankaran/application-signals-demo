@@ -117,7 +117,7 @@ class PetResource {
                 petType = pet.getType().getName();
             }
         } catch (RuntimeException e) {
-            log.error("Failed to find pet with ID: {}", petId, e);
+            log.error("Failed to find pet with ID: {} for owner: {}", petId, ownerId, e);
         }
 
         bedrockRuntimeV1Service.invokeTitanModel(petType);
@@ -179,7 +179,7 @@ class PetResource {
                 log.warn("No insurance found for pet {}", petId);
             }
         } catch (RestClientException ex) {
-            log.error("Failed to fetch insurance for pet with ID: {}", petId, ex);
+            log.error("Failed to fetch insurance for pet with ID: {} for owner: {}", petId, ownerId, ex);
         }
 
         // enrich with nutrition
@@ -194,8 +194,8 @@ class PetResource {
                     log.warn("No nutrition facts found for pet type {}", detail.getType().getName());
                 }
             } catch (RestClientException ex) {
-                log.error("Failed to fetch nutrition for pet type: {}", 
-                    detail.getType().getName(), ex);
+                log.error("Failed to fetch nutrition for pet type: {} for owner: {}", 
+                    detail.getType().getName(), ownerId, ex);
             }
         } else {
             log.warn("Pet {} has no type information, skipping nutrition lookup", petId);
