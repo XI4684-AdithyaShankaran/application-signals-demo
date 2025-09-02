@@ -22,7 +22,8 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micrometer.core.annotation.Timed;
 import io.opentelemetry.api.trace.Span;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ import org.springframework.samples.petclinic.customers.Util.WellKnownAttributes;
 import org.springframework.samples.petclinic.customers.aws.*;
 import org.springframework.samples.petclinic.customers.model.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.validation.constraints.Min;
@@ -46,8 +48,9 @@ import java.util.Optional;
 @RestController
 @Timed("petclinic.pet")
 @RequiredArgsConstructor
-@Slf4j
 class PetResource {
+
+    private static final Logger log = LoggerFactory.getLogger(PetResource.class);
 
     private final PetRepository petRepository;
     private final OwnerRepository ownerRepository;
@@ -175,7 +178,7 @@ class PetResource {
             } else {
                 log.warn("No insurance found for pet {}", petId);
             }
-        } catch (RuntimeException ex) {
+        } catch (RestClientException ex) {
             log.error("Failed to fetch insurance for pet with ID: {}", petId, ex);
         }
 
@@ -190,7 +193,7 @@ class PetResource {
                 } else {
                     log.warn("No nutrition facts found for pet type {}", detail.getType().getName());
                 }
-            } catch (RuntimeException ex) {
+            } catch (RestClientException ex) {
                 log.error("Failed to fetch nutrition for pet type: {}", 
                     detail.getType().getName(), ex);
             }
