@@ -25,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.samples.petclinic.customers.Util.WellKnownAttributes;
 import org.springframework.samples.petclinic.customers.aws.*;
@@ -63,8 +62,7 @@ class PetResource {
     private final BedrockV1Service bedrockV1Service;
     private final BedrockV2Service bedrockV2Service;
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
     @GetMapping("/petTypes")
     public List<PetType> getPetTypes() {
@@ -82,13 +80,13 @@ class PetResource {
         Span.current().setAttribute(WellKnownAttributes.ORDER_ID, petRequest.getId());
 
         final Optional<Owner> optionalOwner = ownerRepository.findById(ownerId);
-        Owner owner = optionalOwner.orElseThrow(() -> new ResourceNotFoundException("Owner "+ownerId+" not found"));
+        Owner owner = optionalOwner.orElseThrow(() -> new ResourceNotFoundException(String.format("Owner %d not found", ownerId)));
         
         final Pet pet = new Pet();
         try {
             sqsService.sendMsg();
             owner.addPet(pet);
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             log.error("Failed to add pet for owner ID: {}", ownerId, e);
             throw e;
         }
@@ -102,35 +100,35 @@ class PetResource {
         Span.current().setAttribute(WellKnownAttributes.OWNER_ID, ownerId);
         Span.current().setAttribute(WellKnownAttributes.ORDER_ID, petId);
 
-        log.info("bedrockAgentV1Service Getting knowledge base");
+        log.debug("bedrockAgentV1Service getting knowledge base");
         bedrockAgentV1Service.getKnowledgeBase();
-        log.info("bedrockAgentV1Service FINISH Getting knowledge base");
-        log.info("bedrockV1Service Getting guardrail");
+        log.debug("bedrockAgentV1Service finished getting knowledge base");
+        log.debug("bedrockV1Service getting guardrail");
         bedrockV1Service.getGuardrail();
-        log.info("bedrockV1Service FINISH Getting guardrail");
-        log.info("DEBUG: CALLING BEDROCK petId = " + petId);
-        log.info("DEBUG: bedrockRuntimeV1Service Invoking Titan model");
+        log.debug("bedrockV1Service finished getting guardrail");
+        log.debug("Calling Bedrock petId={}", petId);
+        log.debug("bedrockRuntimeV1Service invoking Titan model");
         String petType = "pets";
         try {
             Pet pet = findPetById(petId);
             if (pet.getType() != null) {
                 petType = pet.getType().getName();
             }
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             log.error("Failed to find pet with ID: {} for owner: {}", petId, ownerId, e);
         }
 
         bedrockRuntimeV1Service.invokeTitanModel(petType);
-        log.info("bedrockRuntimeV1Service FINISH Invoking Titan model");
-        log.info("bedrockAgentV2Service Getting knowledge base");
+        log.debug("bedrockRuntimeV1Service finished invoking Titan model");
+        log.debug("bedrockAgentV2Service getting knowledge base");
         bedrockAgentV2Service.bedrockAgentGetKnowledgeBaseV2();
-        log.info("bedrockAgentV2Service FINISH Getting knowledge base");
-        log.info("bedrockV2Service Getting guardrail");
+        log.debug("bedrockAgentV2Service finished getting knowledge base");
+        log.debug("bedrockV2Service getting guardrail");
         bedrockV2Service.getGuardrail();
-        log.info("bedrockV2Service FINISH Getting guardrail");
-        log.info("bedrockRuntimeV2Service Invoking Anthropic claude");
+        log.debug("bedrockV2Service finished getting guardrail");
+        log.debug("bedrockRuntimeV2Service invoking Anthropic Claude");
         bedrockRuntimeV2Service.invokeAnthropicClaude(petType);
-        log.info("bedrockRuntimeV2Service FINISH Invoking Anthropic claude");
+        log.debug("bedrockRuntimeV2Service finished invoking Anthropic Claude");
     }
 
     @PutMapping("/owners/{ownerId}/pets/{petId}")
@@ -168,8 +166,8 @@ class PetResource {
 
         // enrich with insurance
         try {
-            ResponseEntity<PetInsurance> response = restTemplate.getForEntity(
-                "http://insurance-service/pet-insurances/" + detail.getId(), PetInsurance.class);
+            String url = String.format("http://insurance-service/pet-insurances/%d", detail.getId());
+            ResponseEntity<PetInsurance> response = restTemplate.getForEntity(url, PetInsurance.class);
             PetInsurance petInsurance = response.getBody();
             if (petInsurance != null) {
                 detail.setInsurance_id(petInsurance.getInsurance_id());
@@ -185,8 +183,8 @@ class PetResource {
         // enrich with nutrition
         if (detail.getType() != null && detail.getType().getName() != null) {
             try {
-                ResponseEntity<PetNutrition> response = restTemplate.getForEntity(
-                    "http://nutrition-service/nutrition/" + detail.getType().getName(), PetNutrition.class);
+                String nutritionUrl = String.format("http://nutrition-service/nutrition/%s", detail.getType().getName());
+                ResponseEntity<PetNutrition> response = restTemplate.getForEntity(nutritionUrl, PetNutrition.class);
                 PetNutrition petNutrition = response.getBody();
                 if (petNutrition != null) {
                     detail.setNutritionFacts(petNutrition.getFacts());
@@ -205,17 +203,14 @@ class PetResource {
     }
 
     public PetDetails findPetFallback(int ownerId, int petId, Exception ex) {
-        log.warn("Circuit breaker fallback for pet {}: {}", petId, ex.getMessage());
+        log.warn("Circuit breaker fallback for pet {}", petId, ex);
         PetDetails detail = new PetDetails(findPetById(petId));
         return detail;
     }
 
     private Pet findPetById(int petId) {
-        Optional<Pet> pet = petRepository.findById(petId);
-        if (!pet.isPresent()) {
-            throw new ResourceNotFoundException("Pet "+petId+" not found");
-        }
-        return pet.get();
+        return petRepository.findById(petId)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("Pet %d not found", petId)));
     }
 
 }
